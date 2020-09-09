@@ -24,7 +24,7 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(Analytic currentUser);
         IEnumerable<Analytic> GetTeam(Analytic analytic);
         void AddActivity(TimeSheetTable activity);
-        Analytic LoadAnalyticData();
+        Analytic LoadAnalyticData(string UserName);
         void UpdateProcess(TimeSheetTable oldProcess, TimeSheetTable newProcess);
         void DeleteRecord(TimeSheetTable record);
         bool IsCollisionedWithOtherRecords(TimeSheetTable record);

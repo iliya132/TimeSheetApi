@@ -163,17 +163,9 @@ namespace TimeSheetApi.Model.Implementations
         /// Получает информацию о текущем аналитике, и если запись в БД не существует - создаёт новую
         /// </summary>
         /// <returns></returns>
-        public Analytic LoadAnalyticData()
+        public Analytic LoadAnalyticData(string userName)
         {
-            string user;
-            if (Environment.UserName.ToLower().Equals("iliya")) //DEV at home
-            {
-                user = "u_m0x0c";
-            }
-            else
-            {
-                user = Environment.UserName.ToLower();
-            }
+            string user = userName;
 
             Analytic analytic;
             analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(user));
@@ -214,7 +206,7 @@ namespace TimeSheetApi.Model.Implementations
                 Include("Risks").
                 Include("Escalations").
                 Include("Supports").
-                Where(i => i.AnalyticId == user.Id && DbFunctions.TruncateTime(i.TimeStart) == date.Date).ToList();
+                Where(i => i.AnalyticId == user.Id && i.TimeStart.Date == date.Date).ToList();
             return timeSheetTables;
         }
 
@@ -419,7 +411,7 @@ namespace TimeSheetApi.Model.Implementations
         {
             return _dbContext.TimeSheetTableSet.
                 Where(record => record.AnalyticId == analytic.Id && record.TimeStart >= start && record.TimeEnd <= end).
-                GroupBy(record => DbFunctions.TruncateTime(record.TimeStart)).
+                GroupBy(record => record.TimeStart.Date).
                 Count();
         }
         public IEnumerable<Analytic> GetTeam(Analytic analytic) => _dbContext.AnalyticSet.

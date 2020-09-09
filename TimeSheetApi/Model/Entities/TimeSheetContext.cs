@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//#define TestModel
 
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,17 @@ using System.Threading.Tasks;
 
 using TimeSheetApi.Model.Entities;
 
+
 namespace TimeSheetApi.Model
 {
+
     public class TimeSheetContext :DbContext
     {
+#if TestModel
         const string CONNECTION_STRING = @"Data Source=ilyaHome;Initial Catalog=TimeSheet;Integrated Security=True";
+#else
+        const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+#endif
         public TimeSheetContext() : base()
         { }
 
