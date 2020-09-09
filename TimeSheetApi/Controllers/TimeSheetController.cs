@@ -111,6 +111,6 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetDaysWorkedCount))]
-        public int GetDaysWorkedCount((Analytic currentUser, DateTime lastMonthFirstDay, DateTime lastMonthLastDay) input) => _dbProvider.GetDaysWorkedCount(input.currentUser, input.lastMonthFirstDay, input.lastMonthLastDay);
+        public int GetDaysWorkedCount(string userName, DateTime lastMonthFirstDay, DateTime lastMonthLastDay) => _dbProvider.GetDaysWorkedCount(userName, lastMonthFirstDay, lastMonthLastDay);
     }
 }

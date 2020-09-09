@@ -29,12 +29,13 @@ namespace TimeSheetApi.Model.Implementations
         /// </summary>
         /// <param name="process">Процесс, к которому нужно подобрать подсказки</param>
         /// <returns>Стек тем, введенных ранее пользователем</returns>
-        public IEnumerable<string> GetSubjectHints(Process process)
+        public IEnumerable<string> GetSubjectHints(int Process_id, string userName)
         {
+            Process process = _dbContext.ProcessSet.FirstOrDefault(i => i.Id == Process_id);
             if (process != null)
             {
                 return _dbContext.TimeSheetTableSet.
-                    Where(i => i.AnalyticId == _currentAnalytic.Id &&
+                    Where(i => i.Analytic.UserName.ToLower().Equals(userName.ToLower()) &&
                         i.Subject.Length > 0 &&
                         i.Process_id == process.Id).OrderBy(i => i.TimeStart).Select(i => i.Subject).ToList();
             }
@@ -112,8 +113,9 @@ namespace TimeSheetApi.Model.Implementations
         /// </summary>
         /// <param name="currentUser"></param>
         /// <returns></returns>
-        public IEnumerable<Analytic> GetMyAnalyticsData(Analytic currentUser)
+        public IEnumerable<Analytic> GetMyAnalyticsData(string userName)
         {
+            Analytic currentUser = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
             ObservableCollection<Analytic> analytics = new ObservableCollection<Analytic>();
             switch (currentUser.RoleTableId)
             {
@@ -429,10 +431,10 @@ namespace TimeSheetApi.Model.Implementations
                 Sum() / 60 ?? 0;
         }
 
-        public int GetDaysWorkedCount(Analytic analytic, DateTime start, DateTime end)
+        public int GetDaysWorkedCount(string userName, DateTime start, DateTime end)
         {
             return _dbContext.TimeSheetTableSet.
-                Where(record => record.AnalyticId == analytic.Id && record.TimeStart >= start && record.TimeEnd <= end).
+                Where(record => record.Analytic.UserName.ToLower().Equals(userName.ToLower()) && record.TimeStart >= start && record.TimeEnd <= end).
                 GroupBy(record => record.TimeStart.Date).
                 Count();
         }

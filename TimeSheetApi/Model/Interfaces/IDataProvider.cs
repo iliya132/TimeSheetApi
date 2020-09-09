@@ -9,7 +9,7 @@ namespace TimeSheetApi.Model.Interfaces
 {
     public interface IDataProvider
     {
-        IEnumerable<string> GetSubjectHints(Process process);
+        IEnumerable<string> GetSubjectHints(int Process_id, string userName);
         bool ForcedToQuit();
         IEnumerable<Process> GetProcesses();
         IEnumerable<BusinessBlock> GetBusinessBlocks();
@@ -18,7 +18,7 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<Escalation> GetEscalation();
         IEnumerable<Formats> GetFormat();
         IEnumerable<Risk> GetRisks();
-        IEnumerable<Analytic> GetMyAnalyticsData(Analytic currentUser);
+        IEnumerable<Analytic> GetMyAnalyticsData(string userName);
         IEnumerable<string> GetProcessBlocks();
         IEnumerable<string> GetSubBlocksNames();
         void AddActivity(TimeSheetTable activity);
@@ -34,7 +34,7 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName);
         void Commit();
         double GetTimeSpent(string userName, DateTime start, DateTime end);
-        int GetDaysWorkedCount(Analytic currentUser, DateTime lastMonthFirstDay, DateTime lastMonthLastDay);
+        int GetDaysWorkedCount(string userName, DateTime lastMonthFirstDay, DateTime lastMonthLastDay);
         IEnumerable<Analytic> GetTeam(Analytic analytic);
     }
 }
