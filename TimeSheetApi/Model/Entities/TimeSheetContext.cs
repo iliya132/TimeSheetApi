@@ -1,4 +1,4 @@
-﻿//#define TestModel
+﻿#define TestModel
 
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -16,7 +16,7 @@ namespace TimeSheetApi.Model
     public class TimeSheetContext :DbContext
     {
 #if TestModel
-        const string CONNECTION_STRING = @"Data Source=ilyaHome;Initial Catalog=TimeSheet;Integrated Security=True";
+        const string CONNECTION_STRING = @"Data Source=ilyaHome;Initial Catalog=TimeSheet; Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
 #else
         const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
 #endif

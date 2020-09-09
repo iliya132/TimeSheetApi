@@ -13,7 +13,7 @@ using Process = TimeSheetApi.Model.Entities.Process;
 
 namespace TimeSheetApi.Model.Implementations
 {
-    public class EFDataProvider : IDataProvider
+    class EFDataProvider : IDataProvider
     {
         TimeSheetContext _dbContext = new TimeSheetContext();
         Analytic _currentAnalytic;
@@ -36,10 +36,7 @@ namespace TimeSheetApi.Model.Implementations
                 return _dbContext.TimeSheetTableSet.
                     Where(i => i.AnalyticId == _currentAnalytic.Id &&
                         i.Subject.Length > 0 &&
-                        i.Process_id == process.Id).
-                    GroupBy(i => i.Subject).
-                    OrderBy(i => i.Count()).Select(i => i.Key).
-                    ToList();
+                        i.Process_id == process.Id).OrderBy(i => i.TimeStart).Select(i => i.Subject).ToList();
             }
             return new List<string>();
         }
@@ -70,8 +67,9 @@ namespace TimeSheetApi.Model.Implementations
         /// Удалить запись из БД
         /// </summary>
         /// <param name="record"></param>
-        public void DeleteRecord(TimeSheetTable record)
+        public void DeleteRecord(int record_id)
         {
+            TimeSheetTable record = _dbContext.TimeSheetTableSet.FirstOrDefault(i => i.Id == record_id);
             _dbContext.TimeSheetTableSet.Remove(record);
             _dbContext.SaveChanges();
         }
@@ -142,6 +140,18 @@ namespace TimeSheetApi.Model.Implementations
         }
 
         /// <summary>
+        /// Выгрузить отчет
+        /// </summary>
+        /// <param name="ReportType">Тип отчета</param>
+        /// <param name="analytics">список выбранных аналитиков</param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public void GetReport(int ReportType, Analytic[] analytics, DateTime start, DateTime end)
+        {
+
+        }
+
+        /// <summary>
         /// Получить список всех рисков
         /// </summary>
         /// <returns></returns>
@@ -160,21 +170,29 @@ namespace TimeSheetApi.Model.Implementations
         public IEnumerable<Supports> GetSupports() => _dbContext.SupportsSet.ToList();
 
         /// <summary>
+        /// Метод устанавливает свойство видимости вкладки "Кабинет руководителя"
+        /// </summary>
+        /// <param name="currentUser">Текущий пользователь</param>
+        /// <returns></returns>
+        public bool IsAnalyticHasAccess(string userName) => _dbContext.AnalyticSet.
+            FirstOrDefault(a => a.UserName.ToLower().Equals(userName.ToLower())).Role.Id < 6 ?
+            true :
+            false;
+
+        /// <summary>
         /// Получает информацию о текущем аналитике, и если запись в БД не существует - создаёт новую
         /// </summary>
         /// <returns></returns>
         public Analytic LoadAnalyticData(string userName)
         {
-            string user = userName;
-
             Analytic analytic;
-            analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(user));
+            analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             if (analytic == null)
             {
                 analytic = new Analytic()
                 {
                     //TODO доработать загрузку данных из БД Oracle
-                    UserName = user,
+                    UserName = userName,
                     DepartmentId = 1,
                     DirectionId = 1,
                     FirstName = "NotSet",
@@ -187,7 +205,7 @@ namespace TimeSheetApi.Model.Implementations
                 };
                 _dbContext.AnalyticSet.Add(analytic);
                 _dbContext.SaveChanges();
-                analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(user));
+                analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             }
             _currentAnalytic = analytic;
             return analytic;
@@ -199,8 +217,9 @@ namespace TimeSheetApi.Model.Implementations
         /// <param name="date"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, Analytic user)
+        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, string userName)
         {
+            Analytic user = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
             List<TimeSheetTable> timeSheetTables;
             timeSheetTables = _dbContext.TimeSheetTableSet.Include("BusinessBlocks").
                 Include("Risks").
@@ -229,8 +248,9 @@ namespace TimeSheetApi.Model.Implementations
             _dbContext.SaveChanges();
         }
 
-        public void RemoveSelection(TimeSheetTable record)
+        public void RemoveSelection(int record_id)
         {
+            TimeSheetTable record = _dbContext.TimeSheetTableSet.FirstOrDefault(i => i.Id == record_id);
             List<BusinessBlockNew> businessBlocksToDelete = _dbContext.NewBusinessBlockSet.Where(rec => rec.TimeSheetTableId == record.Id).ToList();
             List<EscalationNew> escalationsToDelete = _dbContext.NewEscalations.Where(rec => rec.TimeSheetTableId == record.Id).ToList();
             List<SupportNew> supportsToDelete = _dbContext.NewSupportsSet.Where(rec => rec.TimeSheetTableId == record.Id).ToList();
@@ -379,8 +399,10 @@ namespace TimeSheetApi.Model.Implementations
             return dataTable;
         }
 
-        public TimeSheetTable GetLastRecordWithSameProcess(Process process, Analytic user)
+        public TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName)
         {
+            Process process = _dbContext.ProcessSet.FirstOrDefault(proc => proc.Id == process_id);
+            Analytic user = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
             return _dbContext.TimeSheetTableSet.Include("BusinessBlocks").
                 Include("Risks").
                 Include("Escalations").
@@ -389,9 +411,9 @@ namespace TimeSheetApi.Model.Implementations
                 FirstOrDefault(rec => rec.Process_id == process.Id && rec.AnalyticId == user.Id);
         }
 
-        public IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(Analytic currentUser)
+        public IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName)
         {
-            return _dbContext.TimeSheetTableSet.Where(i => i.AnalyticId == currentUser.Id).ToList();
+            return _dbContext.TimeSheetTableSet.Where(i => i.Analytic.UserName.ToLower().Equals(userName.ToLower())).ToList();
         }
 
         public void Commit()
@@ -399,10 +421,10 @@ namespace TimeSheetApi.Model.Implementations
             _dbContext.SaveChanges();
         }
 
-        public double GetTimeSpent(Analytic analytic, DateTime start, DateTime end)
+        public double GetTimeSpent(string userName, DateTime start, DateTime end)
         {
             return _dbContext.TimeSheetTableSet.
-                Where(record => record.AnalyticId == analytic.Id && record.TimeStart >= start && record.TimeEnd <= end && record.Process_id != 62 && record.Process_id != 63).
+                Where(record => record.Analytic.UserName.ToLower().Equals(userName.ToLower()) && record.TimeStart >= start && record.TimeEnd <= end && record.Process_id != 62 && record.Process_id != 63).
                 Select(record => (double?)record.TimeSpent).
                 Sum() / 60 ?? 0;
         }

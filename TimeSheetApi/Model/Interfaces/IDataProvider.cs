@@ -10,6 +10,7 @@ namespace TimeSheetApi.Model.Interfaces
     public interface IDataProvider
     {
         IEnumerable<string> GetSubjectHints(Process process);
+        bool ForcedToQuit();
         IEnumerable<Process> GetProcesses();
         IEnumerable<BusinessBlock> GetBusinessBlocks();
         IEnumerable<Supports> GetSupports();
@@ -20,18 +21,20 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<Analytic> GetMyAnalyticsData(Analytic currentUser);
         IEnumerable<string> GetProcessBlocks();
         IEnumerable<string> GetSubBlocksNames();
-        IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, Analytic user);
-        IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(Analytic currentUser);
-        IEnumerable<Analytic> GetTeam(Analytic analytic);
         void AddActivity(TimeSheetTable activity);
-        Analytic LoadAnalyticData(string UserName);
+        Analytic LoadAnalyticData(string userName);
         void UpdateProcess(TimeSheetTable oldProcess, TimeSheetTable newProcess);
-        void DeleteRecord(TimeSheetTable record);
+        void DeleteRecord(int record_id);
+        IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, string userName);
+        void GetReport(int ReportType, Analytic[] analytics, DateTime start, DateTime end);
         bool IsCollisionedWithOtherRecords(TimeSheetTable record);
-        TimeSheetTable GetLastRecordWithSameProcess(Process process, Analytic user);
-        void RemoveSelection(TimeSheetTable record);
+        bool IsAnalyticHasAccess(string userName);
+        TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName);
+        void RemoveSelection(int record_id);
+        IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName);
         void Commit();
-        double GetTimeSpent(Analytic analytic, DateTime start, DateTime end);
+        double GetTimeSpent(string userName, DateTime start, DateTime end);
         int GetDaysWorkedCount(Analytic currentUser, DateTime lastMonthFirstDay, DateTime lastMonthLastDay);
+        IEnumerable<Analytic> GetTeam(Analytic analytic);
     }
 }

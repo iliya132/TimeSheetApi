@@ -19,7 +19,7 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetSubjectHints))]
-        public IEnumerable<string> GetSubjectHints(Process process) => _dbProvider.GetSubjectHints(process);
+        public IEnumerable<string> GetSubjectHints(int process_id, string userName) => _dbProvider.GetSubjectHints(process_id, userName);
 
         [HttpGet]
         [Route(nameof(GetProcesses))]
@@ -51,7 +51,7 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetMyAnalyticsData))]
-        public IEnumerable<Analytic> GetMyAnalyticsData(Analytic currentUser) => _dbProvider.GetMyAnalyticsData(currentUser);
+        public IEnumerable<Analytic> GetMyAnalyticsData(string userName) => _dbProvider.GetMyAnalyticsData(userName);
 
         [HttpGet]
         [Route(nameof(GetProcessBlocks))]
@@ -63,11 +63,11 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(LoadTimeSheetRecords))]
-        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords((DateTime date, Analytic user) input) => _dbProvider.LoadTimeSheetRecords(input.date, input.user);
+        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords((DateTime date, string userName) input) => _dbProvider.LoadTimeSheetRecords(input.date, input.userName);
 
         [HttpGet]
         [Route(nameof(GetTimeSheetRecordsForAnalytic))]
-        public IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(Analytic currentUser) => _dbProvider.GetTimeSheetRecordsForAnalytic(currentUser);
+        public IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName) => _dbProvider.GetTimeSheetRecordsForAnalytic(userName);
 
         [HttpGet]
         [Route(nameof(GetTeam))]
@@ -87,7 +87,7 @@ namespace TimeSheetApi.Controllers
 
         [HttpDelete]
         [Route(nameof(DeleteRecord))]
-        public void DeleteRecord(TimeSheetTable record) => _dbProvider.DeleteRecord(record);
+        public void DeleteRecord(int record_id) => _dbProvider.DeleteRecord(record_id);
 
         [HttpGet]
         [Route(nameof(IsCollisionedWithOtherRecords))]
@@ -95,11 +95,11 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetLastRecordWithSameProcess))]
-        public TimeSheetTable GetLastRecordWithSameProcess((Process process, Analytic user) input) => _dbProvider.GetLastRecordWithSameProcess(input.process, input.user);
+        public TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName) => _dbProvider.GetLastRecordWithSameProcess(process_id, userName);
 
         [HttpDelete]
         [Route(nameof(RemoveSelection))]
-        public void RemoveSelection(TimeSheetTable record) => _dbProvider.RemoveSelection(record);
+        public void RemoveSelection(int record_id) => _dbProvider.RemoveSelection(record_id);
 
         [HttpPost]
         [Route(nameof(Commit))]
@@ -107,7 +107,7 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetTimeSpent))]
-        public double GetTimeSpent((Analytic analytic, DateTime start, DateTime end) input) => _dbProvider.GetTimeSpent(input.analytic, input.start, input.end);
+        public double GetTimeSpent(string userName, DateTime start, DateTime end) => _dbProvider.GetTimeSpent(userName, start, end);
 
         [HttpGet]
         [Route(nameof(GetDaysWorkedCount))]
