@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TimeSheetApi.Model.Entities
 {
@@ -13,6 +14,7 @@ namespace TimeSheetApi.Model.Entities
         public Supports Supports { get; set; }
 
         [ForeignKey(nameof(TimeSheetTableId))]
+        [JsonIgnore]
         public TimeSheetTable TimeSheetTable { get; set; }
     }
 }

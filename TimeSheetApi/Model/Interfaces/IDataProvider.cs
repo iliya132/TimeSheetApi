@@ -23,7 +23,7 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<string> GetSubBlocksNames();
         void AddActivity(TimeSheetTable activity);
         Analytic LoadAnalyticData(string userName);
-        void UpdateProcess(TimeSheetTable oldProcess, TimeSheetTable newProcess);
+        void UpdateProcess(int oldProcessId, TimeSheetTable newRecord);
         void DeleteRecord(int record_id);
         IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, string userName);
         void GetReport(int ReportType, Analytic[] analytics, DateTime start, DateTime end);

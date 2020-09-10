@@ -46,7 +46,7 @@ namespace TimeSheetApi.Model.Implementations
         /// Получить список всех существующих процессов
         /// </summary>
         /// <returns>ObservableCollection</returns>
-        public IEnumerable<Process> GetProcesses() => new ObservableCollection<Process>(_dbContext.ProcessSet);
+        public IEnumerable<Process> GetProcesses() => new List<Process>(_dbContext.ProcessSet.Include(i=>i.Block).Include(i=>i.SubBlock));
 
         /// <summary>
         /// Получить список всех БизнесПодразделений
@@ -60,6 +60,8 @@ namespace TimeSheetApi.Model.Implementations
         public void AddActivity(TimeSheetTable newRecord)
         {
             newRecord.TimeSpent = (int)(newRecord.TimeEnd - newRecord.TimeStart).TotalMinutes;
+            newRecord.AnalyticId = newRecord.Analytic != null ? newRecord.Analytic.Id : newRecord.AnalyticId;
+            newRecord.Analytic = null;
             _dbContext.TimeSheetTableSet.Add(newRecord);
             _dbContext.SaveChanges();
         }
@@ -70,7 +72,48 @@ namespace TimeSheetApi.Model.Implementations
         /// <param name="record"></param>
         public void DeleteRecord(int record_id)
         {
-            TimeSheetTable record = _dbContext.TimeSheetTableSet.FirstOrDefault(i => i.Id == record_id);
+            TimeSheetTable record = _dbContext.TimeSheetTableSet
+                .Include("BusinessBlocks")
+                .Include("Supports")
+                .Include("Escalations")
+                .Include("Risks")
+                .FirstOrDefault(i => i.Id == record_id);
+            if (record.BusinessBlocks != null && record.BusinessBlocks.Count > 0)
+            {
+                while (record.BusinessBlocks.Count > 0)
+                {
+                    int id = record.BusinessBlocks[0].Id;
+                    record.BusinessBlocks.RemoveAt(0);
+                    _dbContext.NewBusinessBlockSet.Remove(_dbContext.NewBusinessBlockSet.First(o => o.Id == id));
+                }
+            }
+            if (record.Supports != null && record.Supports.Count > 0)
+            {
+                while (record.BusinessBlocks.Count > 0)
+                {
+                    int id = record.Supports[0].Id;
+                    record.Supports.RemoveAt(0);
+                    _dbContext.NewSupportsSet.Remove(_dbContext.NewSupportsSet.First(o => o.Id == id));
+                }
+            }
+            if (record.Escalations != null && record.Escalations.Count > 0)
+            {
+                while (record.Escalations.Count > 0)
+                {
+                    int id = record.Escalations[0].Id;
+                    record.Escalations.RemoveAt(0);
+                    _dbContext.NewEscalations.Remove(_dbContext.NewEscalations.First(o => o.Id == id));
+                }
+            }
+            if (record.Risks != null && record.Risks.Count > 0)
+            {
+                while (record.Risks.Count > 0)
+                {
+                    int id = record.Risks[0].Id;
+                    record.Risks.RemoveAt(0);
+                    _dbContext.NewRiskSet.Remove(_dbContext.NewRiskSet.First(o => o.Id == id));
+                }
+            }
             _dbContext.TimeSheetTableSet.Remove(record);
             _dbContext.SaveChanges();
         }
@@ -116,26 +159,26 @@ namespace TimeSheetApi.Model.Implementations
         public IEnumerable<Analytic> GetMyAnalyticsData(string userName)
         {
             Analytic currentUser = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
-            ObservableCollection<Analytic> analytics = new ObservableCollection<Analytic>();
+            List<Analytic> analytics = new List<Analytic>();
             switch (currentUser.RoleTableId)
             {
                 case (DEPARTMENT_HEAD):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.Where(i => i.DepartmentId == currentUser.DepartmentId).ToArray());
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Where(i => i.DepartmentId == currentUser.DepartmentId).Include(i=>i.Departments).Include(i=>i.Directions).Include(i=>i.Upravlenie).Include(i=>i.Otdel).ToArray());
                     break;
                 case (DIRECTION_HEAD):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.Where(i => i.DirectionId == currentUser.DirectionId));
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Where(i => i.DirectionId == currentUser.DirectionId).Include(i => i.Departments).Include(i => i.Directions).Include(i => i.Upravlenie).Include(i => i.Otdel));
                     break;
                 case (UPRAVLENIE_HEAD):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.Where(i => i.UpravlenieId == currentUser.UpravlenieId));
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Where(i => i.UpravlenieId == currentUser.UpravlenieId).Include(i => i.Departments).Include(i => i.Directions).Include(i => i.Upravlenie).Include(i => i.Otdel));
                     break;
                 case (OTDEL_HEAD):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.Where(i => i.OtdelId == currentUser.OtdelId).ToArray());
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Where(i => i.OtdelId == currentUser.OtdelId).Include(i => i.Departments).Include(i => i.Directions).Include(i => i.Upravlenie).Include(i => i.Otdel).ToArray());
                     break;
                 case (ADMIN):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.ToArray());
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Include(i => i.Departments).Include(i => i.Directions).Include(i => i.Upravlenie).Include(i => i.Otdel).ToArray());
                     break;
                 case (USER):
-                    analytics = new ObservableCollection<Analytic>(_dbContext.AnalyticSet.Where(i => i.Id == currentUser.Id || i.HeadFuncId == currentUser.Id).ToArray());
+                    analytics = new List<Analytic>(_dbContext.AnalyticSet.Where(i => i.Id == currentUser.Id || i.HeadFuncId == currentUser.Id).Include(i => i.Departments).Include(i => i.Directions).Include(i => i.Upravlenie).Include(i => i.Otdel).ToArray());
                     break;
             }
             return analytics;
@@ -188,7 +231,7 @@ namespace TimeSheetApi.Model.Implementations
         public Analytic LoadAnalyticData(string userName)
         {
             Analytic analytic;
-            analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
+            analytic = _dbContext.AnalyticSet.Include("Departments").Include("Directions").Include("Upravlenie").Include("Otdel").Include("AdminHead").Include("FunctionHead").FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             if (analytic == null)
             {
                 analytic = new Analytic()
@@ -223,10 +266,13 @@ namespace TimeSheetApi.Model.Implementations
         {
             Analytic user = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
             List<TimeSheetTable> timeSheetTables;
-            timeSheetTables = _dbContext.TimeSheetTableSet.Include("BusinessBlocks").
-                Include("Risks").
-                Include("Escalations").
-                Include("Supports").
+            timeSheetTables = _dbContext.TimeSheetTableSet.
+                Include(i => i.BusinessBlocks).ThenInclude(i => i.BusinessBlock).
+                Include(i => i.Risks).ThenInclude(i => i.Risk).
+                Include(i => i.Escalations).ThenInclude(i => i.Escalation).
+                Include(i => i.Supports).ThenInclude(i => i.Supports).
+                Include(i=>i.Process).
+                Include(i=>i.ClientWays).Include(i=>i.Formats).
                 Where(i => i.AnalyticId == user.Id && i.TimeStart.Date == date.Date).ToList();
             return timeSheetTables;
         }
@@ -235,18 +281,31 @@ namespace TimeSheetApi.Model.Implementations
         /// Изменить процесс
         /// </summary>
         /// <param name="oldProcess"></param>
-        /// <param name="newProcess"></param>
-        public void UpdateProcess(TimeSheetTable oldProcess, TimeSheetTable newProcess)
+        /// <param name="newRecord"></param>
+        public void UpdateProcess(int oldRecordId, TimeSheetTable newRecord)
         {
-            oldProcess.Process_id = newProcess.Process.Id;
-            oldProcess.Subject = newProcess.Subject;
-            oldProcess.TimeStart = newProcess.TimeStart;
-            oldProcess.TimeEnd = newProcess.TimeEnd;
-            oldProcess.Comment = newProcess.Comment;
-            oldProcess.TimeSpent = (int)(oldProcess.TimeEnd - oldProcess.TimeStart).TotalMinutes;
-            oldProcess.ClientWaysId = newProcess.ClientWays.Id;
-            oldProcess.FormatsId = newProcess.Formats.Id;
-
+            TimeSheetTable oldRecord = _dbContext.TimeSheetTableSet.FirstOrDefault(i => i.Id == oldRecordId);
+            oldRecord.Process_id = newRecord.Process_id;
+            oldRecord.Subject = newRecord.Subject;
+            oldRecord.TimeStart = newRecord.TimeStart;
+            oldRecord.TimeEnd = newRecord.TimeEnd;
+            oldRecord.Comment = newRecord.Comment;
+            oldRecord.TimeSpent = (int)(oldRecord.TimeEnd - oldRecord.TimeStart).TotalMinutes;
+            oldRecord.ClientWaysId = newRecord.ClientWaysId;
+            oldRecord.FormatsId = newRecord.FormatsId;
+            _dbContext.NewBusinessBlockSet.RemoveRange(_dbContext.NewBusinessBlockSet.Where(i => i.TimeSheetTableId == oldRecord.Id));
+            _dbContext.NewEscalations.RemoveRange(_dbContext.NewEscalations.Where(i => i.TimeSheetTableId == oldRecord.Id));
+            _dbContext.NewRiskSet.RemoveRange(_dbContext.NewRiskSet.Where(i => i.TimeSheetTableId == oldRecord.Id));
+            _dbContext.NewSupportsSet.RemoveRange(_dbContext.NewSupportsSet.Where(i => i.TimeSheetTableId == oldRecord.Id));
+            oldRecord.Supports = new List<SupportNew>();
+            oldRecord.Escalations = new List<EscalationNew>();
+            oldRecord.Risks = new List<RiskNew>();
+            oldRecord.BusinessBlocks = new List<BusinessBlockNew>();
+            oldRecord.Supports.AddRange(newRecord.Supports);
+            oldRecord.Escalations.AddRange(newRecord.Escalations);
+            oldRecord.Risks.AddRange(newRecord.Risks);
+            oldRecord.BusinessBlocks.AddRange(newRecord.BusinessBlocks);
+            //TODO Перекидывать множественный выбор
             _dbContext.SaveChanges();
         }
 
@@ -405,10 +464,11 @@ namespace TimeSheetApi.Model.Implementations
         {
             Process process = _dbContext.ProcessSet.FirstOrDefault(proc => proc.Id == process_id);
             Analytic user = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
-            return _dbContext.TimeSheetTableSet.Include("BusinessBlocks").
-                Include("Risks").
-                Include("Escalations").
-                Include("Supports").
+            return _dbContext.TimeSheetTableSet.
+                Include(i=>i.BusinessBlocks).ThenInclude(i=>i.BusinessBlock).
+                Include(i=>i.Risks).ThenInclude(i=>i.Risk).
+                Include(i=>i.Escalations).ThenInclude(i=>i.Escalation).
+                Include(i=>i.Supports).ThenInclude(i=>i.Supports).Include(i=>i.ClientWays).Include(i=>i.Formats).Include(i=>i.Process).
                 OrderByDescending(rec => rec.Id).
                 FirstOrDefault(rec => rec.Process_id == process.Id && rec.AnalyticId == user.Id);
         }
@@ -433,10 +493,11 @@ namespace TimeSheetApi.Model.Implementations
 
         public int GetDaysWorkedCount(string userName, DateTime start, DateTime end)
         {
-            return _dbContext.TimeSheetTableSet.
-                Where(record => record.Analytic.UserName.ToLower().Equals(userName.ToLower()) && record.TimeStart >= start && record.TimeEnd <= end).
-                GroupBy(record => record.TimeStart.Date).
-                Count();
+            Analytic analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
+            List<DateTime> records = _dbContext.TimeSheetTableSet.
+                Where(record => record.AnalyticId == analytic.Id && record.TimeStart >= start && record.TimeEnd <= end).
+                GroupBy(record => record.TimeStart.Date).Select(i=>i.Key).ToList();
+            return records.Count();
         }
         public IEnumerable<Analytic> GetTeam(Analytic analytic) => _dbContext.AnalyticSet.
             Where(a =>

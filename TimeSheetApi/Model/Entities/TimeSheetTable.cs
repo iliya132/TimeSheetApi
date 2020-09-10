@@ -9,6 +9,7 @@ namespace TimeSheetApi.Model.Entities
     public class TimeSheetTable
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("id")]
         public int Id { get; set; }
         [Column("timeStart")]

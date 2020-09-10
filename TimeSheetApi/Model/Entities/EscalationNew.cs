@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace TimeSheetApi.Model.Entities
@@ -18,6 +19,7 @@ namespace TimeSheetApi.Model.Entities
         [ForeignKey(nameof(EscalationId))]
         public virtual Escalation Escalation { get; set; }
         [ForeignKey(nameof(TimeSheetTableId))]
+        [JsonIgnore]
         public virtual TimeSheetTable TimeSheetTable { get; set; }
     }
 }

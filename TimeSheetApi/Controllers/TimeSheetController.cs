@@ -1,6 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using TimeSheetApi.Model.Entities;
 using TimeSheetApi.Model.Interfaces;
 
@@ -23,7 +28,20 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(GetProcesses))]
-        public IEnumerable<Process> GetProcesses() => _dbProvider.GetProcesses();
+        public IActionResult GetProcesses()
+        {
+            return Ok(_dbProvider.GetProcesses());
+            
+        }
+
+        [HttpGet]
+        [Route(nameof(Test))]
+        public Process Test()
+        {
+            List<Process> processes = _dbProvider.GetProcesses().ToList();
+            return processes[0];
+
+        }
 
         [HttpGet]
         [Route(nameof(GetBusinessBlocks))]
@@ -63,7 +81,10 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(LoadTimeSheetRecords))]
-        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords((DateTime date, string userName) input) => _dbProvider.LoadTimeSheetRecords(input.date, input.userName);
+        public IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, string userName)
+        {
+            return _dbProvider.LoadTimeSheetRecords(date, userName);
+        }
 
         [HttpGet]
         [Route(nameof(GetTimeSheetRecordsForAnalytic))]
@@ -83,7 +104,7 @@ namespace TimeSheetApi.Controllers
 
         [HttpPost]
         [Route(nameof(UpdateProcess))]
-        public void UpdateProcess((TimeSheetTable oldProcess, TimeSheetTable newProcess) input) => _dbProvider.UpdateProcess(input.oldProcess, input.newProcess);
+        public void UpdateProcess(int oldProcessId, TimeSheetTable newRecord) => _dbProvider.UpdateProcess(oldProcessId, newRecord);
 
         [HttpDelete]
         [Route(nameof(DeleteRecord))]
