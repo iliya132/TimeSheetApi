@@ -4,9 +4,13 @@ using Newtonsoft.Json;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Mime;
 
 using TimeSheetApi.Model.Entities;
+using TimeSheetApi.Model.Implementations;
 using TimeSheetApi.Model.Interfaces;
 
 namespace TimeSheetApi.Controllers
@@ -112,7 +116,12 @@ namespace TimeSheetApi.Controllers
 
         [HttpGet]
         [Route(nameof(IsCollisionedWithOtherRecords))]
-        public bool IsCollisionedWithOtherRecords(TimeSheetTable record) => _dbProvider.IsCollisionedWithOtherRecords(record);
+        public bool IsCollisionedWithOtherRecords(string start, string end, int analyticId, int recId)
+        {
+            DateTime startDateTime = Convert.ToDateTime(start.Replace('*', ':'));
+            DateTime endDateTime = Convert.ToDateTime(end.Replace('*', ':'));
+            return _dbProvider.IsCollisionedWithOtherRecords(startDateTime, endDateTime, analyticId, recId);
+        }
 
         [HttpGet]
         [Route(nameof(GetLastRecordWithSameProcess))]
@@ -133,5 +142,26 @@ namespace TimeSheetApi.Controllers
         [HttpGet]
         [Route(nameof(GetDaysWorkedCount))]
         public int GetDaysWorkedCount(string userName, DateTime lastMonthFirstDay, DateTime lastMonthLastDay) => _dbProvider.GetDaysWorkedCount(userName, lastMonthFirstDay, lastMonthLastDay);
+
+        [HttpGet]
+        [Route(nameof(GetReportsAvailable))]
+        public IEnumerable<string> GetReportsAvailable() => _dbProvider.GetReportsAvailable();
+
+        [HttpGet]
+        [Route(nameof(GetReport))]
+        public IActionResult GetReport(int ReportType, string analytics, DateTime start, DateTime end)
+        {
+
+            FileInfo fileInfo = _dbProvider.GetReport(ReportType, analytics, start, end);
+
+            Stream stream = new FileStream(fileInfo.FullName, FileMode.Open);
+            if (stream == null)
+            {
+                throw new FileNotFoundException();
+            }
+
+            return File(stream, "application/octet-stream", fileInfo.Name); // returns a FileStreamResult
+
+        }
     }
 }

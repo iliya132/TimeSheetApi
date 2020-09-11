@@ -58,5 +58,6 @@ namespace TimeSheetApi.Model
         public DbSet<SupportNew> NewSupportsSet { get; set; }
         public DbSet<TimeSheetTable> TimeSheetTableSet { get; set; }
         public DbSet<Upravlenie> UpravlenieSet { get; set; }
+        public DbSet<Report> Reports { get; set; }
     }
 }

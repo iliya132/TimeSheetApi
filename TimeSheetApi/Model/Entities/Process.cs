@@ -31,7 +31,7 @@ namespace TimeSheetApi.Model.Entities
         [ForeignKey("ProcessType_Id")]
         public virtual ProcessType ProcessType { get; set; }
         [ForeignKey("Result_Id")]
-        public virtual Result Result1 { get; set; }
+        public virtual Result Result { get; set; }
         public string CodeFull { 
             get
             {

@@ -1,18 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TimeSheetApp.Model.EntitiesBase;
-using TimeSheetApp.Model.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+
 using OfficeOpenXml;
-using System.IO;
 using OfficeOpenXml.Style;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+using TimeSheetApi.Model;
+using TimeSheetApi.Model.Entities;
+
 using TimeSheetApp.Model.Report.Report_Allocation;
 
 namespace TimeSheetApp.Model.Reports
 {
-    
+
     public class Report_Allocations : IReport
     {
         List<MVZ> allUnits = new List<MVZ>();
@@ -28,7 +31,7 @@ namespace TimeSheetApp.Model.Reports
             _tsContext = TimeSheetContext;
             this.analytics = analytics;
         }
-        public void Generate(DateTime start, DateTime end)
+        public FileInfo Generate(DateTime start, DateTime end)
         {
             List<TimeSheetTable> records = _tsContext.TimeSheetTableSet.Include("BusinessBlocks").Where(rec => rec.TimeStart >= start && rec.TimeEnd <= end && rec.Process_id != 62 && rec.Process_id != 63).ToList();
             List<BusinessBlock> blocks = _tsContext.BusinessBlockSet.ToList();
@@ -97,7 +100,6 @@ namespace TimeSheetApp.Model.Reports
                     if (currentUnit.Analytics.Count < 1)
                         continue;
 
-                    System.Windows.Forms.Application.DoEvents();
 
                     #region Analytics
                     
@@ -344,7 +346,7 @@ namespace TimeSheetApp.Model.Reports
                 #region SaveFile & Open
                 string newFileName = $"ReportAllocations{DateTime.Now.ToString("ddMMyyyymmss")}.xlsx";
                 excel.SaveAs(new FileInfo(newFileName));;
-                System.Diagnostics.Process.Start(newFileName);
+                return new FileInfo(newFileName);
                 #endregion
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,14 +27,15 @@ namespace TimeSheetApi.Model.Interfaces
         void UpdateProcess(int oldProcessId, TimeSheetTable newRecord);
         void DeleteRecord(int record_id);
         IEnumerable<TimeSheetTable> LoadTimeSheetRecords(DateTime date, string userName);
-        void GetReport(int ReportType, Analytic[] analytics, DateTime start, DateTime end);
-        bool IsCollisionedWithOtherRecords(TimeSheetTable record);
+        FileInfo GetReport(int ReportType, string analytics, DateTime start, DateTime end);
+        bool IsCollisionedWithOtherRecords(DateTime start, DateTime end, int analyticId, int recId);
         TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName);
         void RemoveSelection(int record_id);
         IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName);
         void Commit();
         double GetTimeSpent(string userName, DateTime start, DateTime end);
         int GetDaysWorkedCount(string userName, DateTime lastMonthFirstDay, DateTime lastMonthLastDay);
+        IEnumerable<string> GetReportsAvailable();
         IEnumerable<Analytic> GetTeam(Analytic analytic);
     }
 }

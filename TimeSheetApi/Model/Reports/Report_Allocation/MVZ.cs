@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using TimeSheetApp.Model.EntitiesBase;
+using TimeSheetApi.Model.Entities;
 
 namespace TimeSheetApp.Model.Report.Report_Allocation
 {

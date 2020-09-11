@@ -1,8 +1,12 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using TimeSheetApp.Model.EntitiesBase;
-using TimeSheetApp.Model.Interfaces;
+
+using TimeSheetApi.Model;
+using TimeSheetApi.Model.Entities;
 
 namespace TimeSheetApp.Model.Reports
 {
@@ -19,9 +23,9 @@ namespace TimeSheetApp.Model.Reports
             _analytics = Analytics.ToList();
         }
 
-        public void Generate(DateTime start, DateTime end)
+        public FileInfo Generate(DateTime start, DateTime end)
         {
-            _timeSheetTable = dataBase.TimeSheetTableSet.Where(i =>
+            _timeSheetTable = dataBase.TimeSheetTableSet.Include(i=>i.Analytic).Where(i =>
             i.TimeStart >= start &&
             i.TimeEnd >= start &&
             i.TimeStart <= end &&
@@ -29,10 +33,10 @@ namespace TimeSheetApp.Model.Reports
             i.Process_id != 62 &&
             i.Process_id != 63).ToList();
 
-            _process = dataBase.ProcessSet.ToList();
+            _process = dataBase.ProcessSet.Include(i=>i.ProcessType).Include("Block").Include("SubBlock").Include("Result").ToList();
 
 
-            List<RowData> rowsResult = new List<RowData>();
+            List <RowData> rowsResult = new List<RowData>();
             foreach (Analytic analytic in _analytics)
             {
                 int timeTotal = 0;
@@ -54,7 +58,7 @@ namespace TimeSheetApp.Model.Reports
                     row.subBlock = process.SubBlock.SubblockName;
                     row.codeFull = $"{process.Block_Id}.{process.SubBlock_Id}.{process.Id}";
                     row.processName = process.ProcName;
-                    row.result = process.Result1.ResultName;
+                    row.result = process.Result.ResultName;
                     row.direction = analytic.Directions.Name;
                     row.upravlenieName = analytic.Upravlenie.Name;
                     row.otdelName = analytic.Otdel.Name;
@@ -91,7 +95,7 @@ namespace TimeSheetApp.Model.Reports
 
             }
 
-            ExcelWorker.ExportToExcel(rowsResult);
+            return ExcelWorker.ExportToExcel(rowsResult);
 
         }
 

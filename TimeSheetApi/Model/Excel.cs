@@ -103,8 +103,9 @@ namespace TimeSheetApp.Model
             #endregion
             System.Diagnostics.Process.Start(fileName);
         }
-        public static void ExportToExcel(List<RowData> rowsCollection)
+        public static FileInfo ExportToExcel(List<RowData> rowsCollection)
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             excel = new ExcelPackage();
             worksheet = excel.Workbook.Worksheets.Add("Sheet1");
             int row = 1, col = 1;
@@ -169,7 +170,7 @@ namespace TimeSheetApp.Model
             }
             excel.SaveAs(newExcelFile);
             excel.Dispose();
-            System.Diagnostics.Process.Start(fileName);
+            return new FileInfo(fileName);
         }
     }
 }

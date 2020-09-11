@@ -10,6 +10,9 @@ using System.Text;
 using TimeSheetApi.Model.Interfaces;
 using System.Diagnostics;
 using Process = TimeSheetApi.Model.Entities.Process;
+using System.IO;
+using TimeSheetApp.Model;
+using TimeSheetApp.Model.Reports;
 
 namespace TimeSheetApi.Model.Implementations
 {
@@ -191,9 +194,26 @@ namespace TimeSheetApi.Model.Implementations
         /// <param name="analytics">список выбранных аналитиков</param>
         /// <param name="start"></param>
         /// <param name="end"></param>
-        public void GetReport(int ReportType, Analytic[] analytics, DateTime start, DateTime end)
+        public FileInfo GetReport(int ReportType, string analytics, DateTime start, DateTime end)
         {
-
+            List<Analytic> analyticsList = new List<Analytic>();
+            string[] analyticIds = analytics.Split('*');
+            FileInfo report = null;
+            foreach(string str in analyticIds)
+            {
+                analyticsList.Add(_dbContext.AnalyticSet.Include(i=>i.Directions).Include(i=>i.Departments).Include(i=>i.Upravlenie).Include(i=>i.Otdel).FirstOrDefault(a => a.Id == Convert.ToInt32(str)));
+            }
+            switch (ReportType)
+            {
+                case (1):
+                    Report_02 repBuilder = new Report_02(_dbContext, analyticsList);
+                    report = repBuilder.Generate(start, end);
+                    break;
+                default:
+                    report = new FileInfo(@"G:\TestFileToTransfer.txt");
+                    break;
+            }
+            return report;
         }
 
         /// <summary>
@@ -317,11 +337,11 @@ namespace TimeSheetApi.Model.Implementations
         /// </summary>
         /// <param name="record"></param>
         /// <returns>true если пересекается, false если нет</returns>
-        public bool IsCollisionedWithOtherRecords(TimeSheetTable record)
+        public bool IsCollisionedWithOtherRecords(DateTime start, DateTime end, int analyticId, int recId)
         {
-            foreach (TimeSheetTable historyRecord in _dbContext.TimeSheetTableSet.Where(i => i.AnalyticId == record.AnalyticId))
+            foreach (TimeSheetTable historyRecord in _dbContext.TimeSheetTableSet.Where(i => i.AnalyticId == analyticId).ToList())
             {
-                if (historyRecord.Id != record.Id && isInInterval(record.TimeStart, record.TimeEnd, historyRecord.TimeStart, historyRecord.TimeEnd))
+                if (historyRecord.Id != recId && isInInterval(start, end, historyRecord.TimeStart, historyRecord.TimeEnd))
                 {
                     return true;
                 }
@@ -496,5 +516,9 @@ namespace TimeSheetApi.Model.Implementations
             a.HeadFuncId == analytic.Id).
             ToList();
 
+        public IEnumerable<string> GetReportsAvailable()
+        {
+            return _dbContext.Reports.Select(i=>i.Name);
+        }
     }
 }

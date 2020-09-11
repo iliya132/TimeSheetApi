@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TimeSheetApp.Model.EntitiesBase;
-using TimeSheetApp.Model.Interfaces;
 using OfficeOpenXml;
 using System.IO;
+using TimeSheetApi.Model;
+using TimeSheetApi.Model.Entities;
 
 namespace TimeSheetApp.Model.Reports
 {
@@ -28,7 +28,7 @@ namespace TimeSheetApp.Model.Reports
             dataBase = _dataBase;
         }
 
-        public void Generate(DateTime start, DateTime end)
+        public FileInfo Generate(DateTime start, DateTime end)
         {
             List<StructureData> structuresData = new List<StructureData>();
             List<Process> _processes = dataBase.ProcessSet.ToList();
@@ -171,7 +171,7 @@ namespace TimeSheetApp.Model.Reports
                 }
                 excel.SaveAs(newExcelFile);
                 excel.Dispose();
-                System.Diagnostics.Process.Start(fileName);
+                return new FileInfo(fileName);
             }
             #endregion
 
