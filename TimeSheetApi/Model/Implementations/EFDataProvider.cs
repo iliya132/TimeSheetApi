@@ -215,16 +215,6 @@ namespace TimeSheetApi.Model.Implementations
         public IEnumerable<Supports> GetSupports() => _dbContext.SupportsSet.ToList();
 
         /// <summary>
-        /// Метод устанавливает свойство видимости вкладки "Кабинет руководителя"
-        /// </summary>
-        /// <param name="currentUser">Текущий пользователь</param>
-        /// <returns></returns>
-        public bool IsAnalyticHasAccess(string userName) => _dbContext.AnalyticSet.
-            FirstOrDefault(a => a.UserName.ToLower().Equals(userName.ToLower())).Role.Id < 6 ?
-            true :
-            false;
-
-        /// <summary>
         /// Получает информацию о текущем аналитике, и если запись в БД не существует - создаёт новую
         /// </summary>
         /// <returns></returns>
@@ -329,15 +319,14 @@ namespace TimeSheetApi.Model.Implementations
         /// <returns>true если пересекается, false если нет</returns>
         public bool IsCollisionedWithOtherRecords(TimeSheetTable record)
         {
-            bool state = false;
             foreach (TimeSheetTable historyRecord in _dbContext.TimeSheetTableSet.Where(i => i.AnalyticId == record.AnalyticId))
             {
                 if (historyRecord.Id != record.Id && isInInterval(record.TimeStart, record.TimeEnd, historyRecord.TimeStart, historyRecord.TimeEnd))
                 {
-                    state = true;
+                    return true;
                 }
             }
-            return state;
+            return false;
         }
 
         /// <summary>
