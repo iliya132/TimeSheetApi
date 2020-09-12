@@ -9,13 +9,11 @@ namespace TimeSheetApi.Model
 
     public class TimeSheetContext :DbContext
     {
-#if DevAtHome
-        const string CONNECTION_STRING = @"Data Source=ilyaHome;Initial Catalog=TimeSheet; Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
-#else
-        const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
-#endif
+
+        const string CONNECTION_STRING = @"Data Source=192.168.0.5,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+        //const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
         public TimeSheetContext() : base()
-        { 
+        {
         }
 
 

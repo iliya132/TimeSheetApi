@@ -18,12 +18,17 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Logging;
 
 namespace TimeSheetApi.Model.Implementations
 {
-    class EFDataProvider : IDataProvider
+    public class EFDataProvider : IDataProvider
     {
-        TimeSheetContext _dbContext = new TimeSheetContext();
+        public EFDataProvider()
+        {
+            _dbContext = new TimeSheetContext();
+        }
+        TimeSheetContext _dbContext { get; set; }
         const int DEPARTMENT_HEAD = 1;
         const int DIRECTION_HEAD = 2;
         const int UPRAVLENIE_HEAD = 3;
