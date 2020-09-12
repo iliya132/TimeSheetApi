@@ -12,20 +12,16 @@ namespace TimeSheetApp.Model.Reports
 {
     public class Report_02 : IReport
     {
-        private readonly TimeSheetContext dataBase;
         private List<TimeSheetTable> _timeSheetTable;
         private List<Process> _process;
-        private List<Analytic> _analytics;
 
-        public Report_02(TimeSheetContext dataBase, IEnumerable<Analytic> Analytics)
+        public Report_02(TimeSheetContext _dbContext, IEnumerable<Analytic> analytics) : base(_dbContext, analytics)
         {
-            this.dataBase = dataBase;
-            _analytics = Analytics.ToList();
         }
 
-        public FileInfo Generate(DateTime start, DateTime end)
+        public override FileInfo Generate(DateTime start, DateTime end)
         {
-            _timeSheetTable = dataBase.TimeSheetTableSet.Include(i=>i.Analytic).Where(i =>
+            _timeSheetTable = _dbContext.TimeSheetTableSet.Include(i=>i.Analytic).Where(i =>
             i.TimeStart >= start &&
             i.TimeEnd >= start &&
             i.TimeStart <= end &&
@@ -33,11 +29,11 @@ namespace TimeSheetApp.Model.Reports
             i.Process_id != 62 &&
             i.Process_id != 63).ToList();
 
-            _process = dataBase.ProcessSet.Include(i=>i.ProcessType).Include("Block").Include("SubBlock").Include("Result").ToList();
+            _process = _dbContext.ProcessSet.Include(i=>i.ProcessType).Include("Block").Include("SubBlock").Include("Result").ToList();
 
 
             List <RowData> rowsResult = new List<RowData>();
-            foreach (Analytic analytic in _analytics)
+            foreach (Analytic analytic in analytics)
             {
                 int timeTotal = 0;
 

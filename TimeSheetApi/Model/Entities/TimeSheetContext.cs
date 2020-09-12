@@ -1,11 +1,5 @@
-﻿#define TestModel
-
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 using TimeSheetApi.Model.Entities;
 
@@ -15,16 +9,27 @@ namespace TimeSheetApi.Model
 
     public class TimeSheetContext :DbContext
     {
-#if TestModel
+#if DevAtHome
         const string CONNECTION_STRING = @"Data Source=ilyaHome;Initial Catalog=TimeSheet; Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
 #else
         const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
 #endif
         public TimeSheetContext() : base()
-        { }
+        { 
+        }
 
+
+        public static readonly ILoggerFactory MyLoggerFactory = LoggerFactory.Create(builder => 
+        {
+            builder.AddDebug();
+            builder.AddFilter((category, level) =>
+            category == DbLoggerCategory.Database.Command.Name &&
+            level == LogLevel.Information);
+
+        });
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            //optionsBuilder.UseLoggerFactory(MyLoggerFactory);
             optionsBuilder.UseSqlServer(CONNECTION_STRING);
         }
 

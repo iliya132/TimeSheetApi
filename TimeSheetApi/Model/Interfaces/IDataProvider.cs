@@ -22,7 +22,7 @@ namespace TimeSheetApi.Model.Interfaces
         IEnumerable<Analytic> GetMyAnalyticsData(string userName);
         IEnumerable<string> GetProcessBlocks();
         IEnumerable<string> GetSubBlocksNames();
-        void AddActivity(TimeSheetTable activity);
+        TimeSheetTable AddActivity(TimeSheetTable activity);
         Analytic LoadAnalyticData(string userName);
         void UpdateProcess(int oldProcessId, TimeSheetTable newRecord);
         void DeleteRecord(int record_id);
@@ -32,6 +32,7 @@ namespace TimeSheetApi.Model.Interfaces
         TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName);
         void RemoveSelection(int record_id);
         IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName);
+        IEnumerable<Process> GetProcessesSortedByRelevance(string userName, string filter);
         void Commit();
         double GetTimeSpent(string userName, DateTime start, DateTime end);
         int GetDaysWorkedCount(string userName, DateTime lastMonthFirstDay, DateTime lastMonthLastDay);

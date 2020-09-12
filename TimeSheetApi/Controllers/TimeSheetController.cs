@@ -95,12 +95,16 @@ namespace TimeSheetApi.Controllers
         public IEnumerable<TimeSheetTable> GetTimeSheetRecordsForAnalytic(string userName) => _dbProvider.GetTimeSheetRecordsForAnalytic(userName);
 
         [HttpGet]
+        [Route(nameof(GetProcessesSortedByRelevance))]
+        public IEnumerable<Process> GetProcessesSortedByRelevance(string userName, string filter) => _dbProvider.GetProcessesSortedByRelevance(userName, filter);
+
+        [HttpGet]
         [Route(nameof(GetTeam))]
         public IEnumerable<Analytic> GetTeam(Analytic analytic) => _dbProvider.GetTeam(analytic);
 
         [HttpPost]
         [Route(nameof(AddActivity))]
-        public void AddActivity(TimeSheetTable activity) => _dbProvider.AddActivity(activity);
+        public TimeSheetTable AddActivity(TimeSheetTable activity) => _dbProvider.AddActivity(activity);
 
         [HttpGet]
         [Route(nameof(LoadAnalyticData))]

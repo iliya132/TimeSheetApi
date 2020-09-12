@@ -19,24 +19,18 @@ namespace TimeSheetApp.Model.Reports
     public class Report_Allocations : IReport
     {
         List<MVZ> allUnits = new List<MVZ>();
-        const int EMPTY_OTDEL = 19;
-        const int EMPTY_UPRAVLENIE = 6;
-        const int EMPTY_DIRECTION = 19;
 
-        TimeSheetContext _tsContext;
-        private readonly Analytic[] analytics;
-
-        public Report_Allocations(TimeSheetContext TimeSheetContext, Analytic[] analytics)
+        public Report_Allocations(TimeSheetContext _dbContext, IEnumerable<Analytic> analytics) : base(_dbContext, analytics)
         {
-            _tsContext = TimeSheetContext;
-            this.analytics = analytics;
         }
-        public FileInfo Generate(DateTime start, DateTime end)
+
+        public override FileInfo Generate(DateTime start, DateTime end)
         {
-            List<TimeSheetTable> records = _tsContext.TimeSheetTableSet.Include("BusinessBlocks").Where(rec => rec.TimeStart >= start && rec.TimeEnd <= end && rec.Process_id != 62 && rec.Process_id != 63).ToList();
-            List<BusinessBlock> blocks = _tsContext.BusinessBlockSet.ToList();
-            List<Process> processes = _tsContext.ProcessSet.ToList();
+            List<TimeSheetTable> records = _dbContext.TimeSheetTableSet.Include("BusinessBlocks").Where(rec => rec.TimeStart >= start && rec.TimeEnd <= end && rec.Process_id != 62 && rec.Process_id != 63).ToList();
+            List<BusinessBlock> blocks = _dbContext.BusinessBlockSet.ToList();
+            List<Process> processes = _dbContext.ProcessSet.ToList();
             allUnits = CreateMVZList();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using (ExcelPackage excel = new ExcelPackage())
             {
                 ExcelWorksheet sheetWithTime = excel.Workbook.Worksheets.Add("Аллокации ДК (min)");
@@ -368,7 +362,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -384,7 +379,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -400,7 +396,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -416,7 +413,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -432,7 +430,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
 
@@ -468,7 +467,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -484,7 +484,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -500,7 +501,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -516,7 +518,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -532,7 +535,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -548,7 +552,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -564,7 +569,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -580,7 +586,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             #endregion
@@ -598,7 +605,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
 
@@ -633,7 +641,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -649,7 +658,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -665,7 +675,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
 
@@ -702,7 +713,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -718,7 +730,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -734,7 +747,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             #endregion
@@ -770,7 +784,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -786,7 +801,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             exportValue.Add(new MVZ
@@ -802,7 +818,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  1 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     1 },
                     { MVZ.AllocationRule.TREASURY,         1 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });
             #endregion
@@ -820,7 +837,8 @@ namespace TimeSheetApp.Model.Reports
                     { MVZ.AllocationRule.MEDIUM_BUSINESS,  0 },
                     { MVZ.AllocationRule.BIG_BUSINESS,     0 },
                     { MVZ.AllocationRule.TREASURY,         0 },
-                    { MVZ.AllocationRule.INVESTMENT,       0 }
+                    { MVZ.AllocationRule.INVESTMENT,       0 },
+                    { MVZ.AllocationRule.Broker,       0 }
                 }
             });//TODO Разработать правила отбора аналитиков, работающих с Альфа-Прайват
 

@@ -13,13 +13,17 @@ using Process = TimeSheetApi.Model.Entities.Process;
 using System.IO;
 using TimeSheetApp.Model;
 using TimeSheetApp.Model.Reports;
+using TimeSheetApi.Model.Reports;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace TimeSheetApi.Model.Implementations
 {
     class EFDataProvider : IDataProvider
     {
         TimeSheetContext _dbContext = new TimeSheetContext();
-        Analytic _currentAnalytic;
         const int DEPARTMENT_HEAD = 1;
         const int DIRECTION_HEAD = 2;
         const int UPRAVLENIE_HEAD = 3;
@@ -34,13 +38,12 @@ namespace TimeSheetApi.Model.Implementations
         /// <returns>Стек тем, введенных ранее пользователем</returns>
         public IEnumerable<string> GetSubjectHints(int Process_id, string userName)
         {
-            Process process = _dbContext.ProcessSet.FirstOrDefault(i => i.Id == Process_id);
-            if (process != null)
+            if (Process_id > 0 && Process_id < 64)
             {
                 return _dbContext.TimeSheetTableSet.
                     Where(i => i.Analytic.UserName.ToLower().Equals(userName.ToLower()) &&
                         i.Subject.Length > 0 &&
-                        i.Process_id == process.Id).OrderBy(i => i.TimeStart).Select(i => i.Subject).ToList();
+                        i.Process_id == Process_id).OrderBy(i => i.TimeStart).Select(i => i.Subject).ToList();
             }
             return new List<string>();
         }
@@ -60,13 +63,28 @@ namespace TimeSheetApi.Model.Implementations
         /// Добавить запись в TimeSheetTable
         /// </summary>
         /// <param name="activity">Процесс</param>
-        public void AddActivity(TimeSheetTable newRecord)
+        public TimeSheetTable AddActivity(TimeSheetTable newRecord)
         {
             newRecord.TimeSpent = (int)(newRecord.TimeEnd - newRecord.TimeStart).TotalMinutes;
             newRecord.AnalyticId = newRecord.Analytic != null ? newRecord.Analytic.Id : newRecord.AnalyticId;
             newRecord.Analytic = null;
             _dbContext.TimeSheetTableSet.Add(newRecord);
             _dbContext.SaveChanges();
+            
+            return _dbContext.TimeSheetTableSet.
+                Include(i=>i.Analytic).
+                Include(i=>i.BusinessBlocks).
+                    ThenInclude(i=>i.BusinessBlock).
+                Include(i=>i.ClientWays).
+                Include(i=>i.Escalations).
+                    ThenInclude(i=>i.Escalation).
+                Include(i=>i.Formats).
+                Include(i=>i.Process).
+                Include(i=>i.Risks).
+                    ThenInclude(i=>i.Risk).
+                Include(i=>i.Supports).
+                    ThenInclude(i=>i.Supports).
+                FirstOrDefault(i => i.Id == newRecord.Id);
         }
 
         /// <summary>
@@ -197,23 +215,19 @@ namespace TimeSheetApi.Model.Implementations
         public FileInfo GetReport(int ReportType, string analytics, DateTime start, DateTime end)
         {
             List<Analytic> analyticsList = new List<Analytic>();
-            string[] analyticIds = analytics.Split('*');
-            FileInfo report = null;
-            foreach(string str in analyticIds)
+            foreach(string str in analytics.Split('*'))
             {
-                analyticsList.Add(_dbContext.AnalyticSet.Include(i=>i.Directions).Include(i=>i.Departments).Include(i=>i.Upravlenie).Include(i=>i.Otdel).FirstOrDefault(a => a.Id == Convert.ToInt32(str)));
+                analyticsList.
+                    Add(_dbContext.AnalyticSet.
+                    Include(i=>i.Departments).
+                    Include(i=>i.Directions).
+                    Include(i=>i.Upravlenie).
+                    Include(i=>i.Otdel).
+                    FirstOrDefault(a => a.Id == Convert.ToInt32(str)));
             }
-            switch (ReportType)
-            {
-                case (1):
-                    Report_02 repBuilder = new Report_02(_dbContext, analyticsList);
-                    report = repBuilder.Generate(start, end);
-                    break;
-                default:
-                    report = new FileInfo(@"G:\TestFileToTransfer.txt");
-                    break;
-            }
-            return report;
+
+            IReport report = ReportFabric.GetReport(ReportType, analyticsList.ToArray(), _dbContext);
+            return report.Generate(start, end);
         }
 
         /// <summary>
@@ -262,7 +276,6 @@ namespace TimeSheetApi.Model.Implementations
                 _dbContext.SaveChanges();
                 analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             }
-            _currentAnalytic = analytic;
             return analytic;
         }
 
@@ -364,111 +377,6 @@ namespace TimeSheetApi.Model.Implementations
                 (start <= start2 && end >= end2); //промежуток времени между датами включает интервал
         }
 
-        /// <summary>
-        /// Отчет по аналитикам
-        /// </summary>
-        /// <param name="analytics"></param>
-        /// <param name="TimeStart"></param>
-        /// <param name="TimeEnd"></param>
-        /// <returns></returns>
-        public DataTable GetAnalyticsReport(Analytic[] analytics, DateTime TimeStart, DateTime TimeEnd)
-        {
-            DataTable dataTable = new DataTable();
-
-            #region placeColumns
-            dataTable.Columns.Add("LastName");
-            dataTable.Columns.Add("FirstName");
-            dataTable.Columns.Add("FatherName");
-            dataTable.Columns.Add("BlockName");
-            dataTable.Columns.Add("SubblockName");
-            dataTable.Columns.Add("ProcessName");
-            dataTable.Columns.Add("Subject");
-            dataTable.Columns.Add("Body");
-            dataTable.Columns.Add("TimeStart");
-            dataTable.Columns.Add("TimeEnd");
-            dataTable.Columns.Add("TimeSpent");
-            dataTable.Columns.Add("BusinessBlockName");
-            dataTable.Columns.Add("SupportsName");
-            dataTable.Columns.Add("ClientWaysName");
-            dataTable.Columns.Add("EscalationsName");
-            dataTable.Columns.Add("FormatsName");
-            dataTable.Columns.Add("RiskName");
-            #endregion
-
-            #region getData
-            foreach (Analytic analytic in analytics)
-            {
-                List<TimeSheetTable> ReportEntity = new List<TimeSheetTable>();
-                ReportEntity = _dbContext.TimeSheetTableSet.Include("BusinessBlocks").
-                    Include("Supports").Include("Risks").Include("Escalations").
-                    Where(record => record.AnalyticId == analytic.Id &&
-                    record.TimeStart > TimeStart && record.TimeStart < TimeEnd).ToList();
-                for (int i = 0; i < ReportEntity.Count; i++)
-                {
-                    DataRow row = dataTable.Rows.Add();
-                    row["LastName"] = ReportEntity[i].Analytic.LastName;
-                    row["FirstName"] = ReportEntity[i].Analytic.FirstName;
-                    row["FatherName"] = ReportEntity[i].Analytic.FatherName;
-                    row["BlockName"] = ReportEntity[i].Process.Block.BlockName;
-                    row["SubblockName"] = ReportEntity[i].Process.SubBlock.SubblockName;
-                    row["ProcessName"] = ReportEntity[i].Process.ProcName;
-                    row["Subject"] = ReportEntity[i].Subject;
-                    row["Body"] = ReportEntity[i].Comment;
-                    row["TimeStart"] = ReportEntity[i].TimeStart;
-                    row["TimeEnd"] = ReportEntity[i].TimeEnd;
-                    row["TimeSpent"] = ReportEntity[i].TimeSpent;
-
-                    #region Добавление информации о мультивыборе
-
-                    StringBuilder choice = new StringBuilder();
-                    foreach (BusinessBlockNew item in ReportEntity[i].BusinessBlocks)
-                    {
-                        choice.Append($"{item.BusinessBlock.BusinessBlockName}; ");
-                    }
-                    row["BusinessBlockName"] = choice.ToString();
-                    #endregion
-
-                    #region Добавление строки о мультивыборе саппорта
-                    choice.Clear();
-                    foreach (SupportNew item in ReportEntity[i].Supports)
-                    {
-                        choice.Append($"{item.Supports.Name}; ");
-                    }
-                    row["SupportsName"] = choice.ToString();
-                    #endregion
-
-                    row["ClientWaysName"] = ReportEntity[i].ClientWays.Name;
-
-                    #region добавление строки о мультивыбора эскалации
-
-                    choice.Clear();
-                    foreach (EscalationNew item in ReportEntity[i].Escalations)
-                    {
-                        choice.Append($"{item.Escalation.Name}; ");
-                    }
-                    row["EscalationsName"] = choice.ToString();
-
-                    #endregion
-
-                    row["FormatsName"] = ReportEntity[i].Formats.Name;
-
-                    #region добавление строки о мультивыборе риска
-
-                    choice.Clear();
-                    foreach (RiskNew item in ReportEntity[i].Risks)
-                    {
-                        choice.Append($"{item.Risk.RiskName}; ");
-                    }
-
-                    row["RiskName"] = choice.ToString();
-
-                    #endregion
-                }
-            }
-            #endregion
-            return dataTable;
-        }
-
         public TimeSheetTable GetLastRecordWithSameProcess(int process_id, string userName)
         {
             Process process = _dbContext.ProcessSet.FirstOrDefault(proc => proc.Id == process_id);
@@ -487,6 +395,26 @@ namespace TimeSheetApi.Model.Implementations
             return _dbContext.TimeSheetTableSet.Where(i => i.Analytic.UserName.ToLower().Equals(userName.ToLower())).ToList();
         }
 
+        public IEnumerable<Process> GetProcessesSortedByRelevance(string userName, string filter)
+        {
+            IOrderedEnumerable<Process> result;
+            List<Process> processes = _dbContext.ProcessSet.ToList();
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                processes = processes.Where(process =>
+                           process.ProcName.ToLower().IndexOf(filter.ToLower()) > -1
+                           || process.CodeFull.IndexOf(filter) >-1
+                        || process.Comment?.ToLower().IndexOf(filter.ToLower()) > -1).ToList();
+                
+            }
+            result = processes.OrderByDescending(process => _dbContext.TimeSheetTableSet.
+                        Where(rec => rec.Analytic.UserName.ToLower().Equals(userName.ToLower())
+                        && rec.Process_id == process.Id).
+                        Count()).
+                ThenBy(proc => proc.Id);
+            return result;
+        }
+
         public void Commit()
         {
             _dbContext.SaveChanges();
@@ -502,12 +430,12 @@ namespace TimeSheetApi.Model.Implementations
 
         public int GetDaysWorkedCount(string userName, DateTime start, DateTime end)
         {
-            Analytic analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower()));
-            List<DateTime> records = _dbContext.TimeSheetTableSet.
-                Where(record => record.AnalyticId == analytic.Id && record.TimeStart >= start && record.TimeEnd <= end).
-                GroupBy(record => record.TimeStart.Date).Select(i=>i.Key).ToList();
-            return records.Count();
+            int analyticId = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName.ToLower())).Id;
+            return _dbContext.TimeSheetTableSet.
+                Where(record => record.AnalyticId == analyticId && record.TimeStart >= start && record.TimeEnd <= end).Select(i=>i.TimeStart.Date).
+                Distinct().Count();
         }
+
         public IEnumerable<Analytic> GetTeam(Analytic analytic) => _dbContext.AnalyticSet.
             Where(a =>
             a.HeadFuncId == analytic.HeadFuncId && (a.OtdelId == analytic.Id || a.UpravlenieId == analytic.UpravlenieId || analytic.DirectionId == a.DirectionId) ||
@@ -518,7 +446,8 @@ namespace TimeSheetApi.Model.Implementations
 
         public IEnumerable<string> GetReportsAvailable()
         {
-            return _dbContext.Reports.Select(i=>i.Name);
+            var result = _dbContext.Reports.Select(i => i.Name);
+            return result;
         }
     }
 }

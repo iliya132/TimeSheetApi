@@ -1,10 +1,10 @@
-﻿using System;
+﻿using OfficeOpenXml;
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OfficeOpenXml;
 using System.IO;
+using System.Linq;
+
 using TimeSheetApi.Model;
 using TimeSheetApi.Model.Entities;
 
@@ -16,23 +16,21 @@ namespace TimeSheetApp.Model.Reports
     public class Report_03 : IReport
     {
         private readonly List<StructuredAnalytic> analyticsOrdered;
-        private readonly TimeSheetContext dataBase;
 
-        public Report_03(IEnumerable<Analytic> analytics, TimeSheetContext _dataBase)
+        public Report_03(TimeSheetContext _dbContext, IEnumerable<Analytic> analytics) : base(_dbContext, analytics)
         {
             analyticsOrdered = new List<StructuredAnalytic>();
             foreach (Analytic analytic in analytics)
             {
                 analyticsOrdered.Add(new StructuredAnalytic(analytic));
             }
-            dataBase = _dataBase;
         }
 
-        public FileInfo Generate(DateTime start, DateTime end)
+        public override FileInfo Generate(DateTime start, DateTime end)
         {
             List<StructureData> structuresData = new List<StructureData>();
-            List<Process> _processes = dataBase.ProcessSet.ToList();
-            List<TimeSheetTable> TimeSheetTableDB = dataBase.TimeSheetTableSet.Where(i => i.TimeStart >= start &&
+            List<Process> _processes = _dbContext.ProcessSet.ToList();
+            List<TimeSheetTable> TimeSheetTableDB = _dbContext.TimeSheetTableSet.Where(i => i.TimeStart >= start &&
                 i.TimeStart <= end).
                 ToList();
             List<Analytic> analytics = TimeSheetTableDB.Select(i=>i.Analytic).Distinct().ToList();
@@ -184,6 +182,5 @@ namespace TimeSheetApp.Model.Reports
             internal Dictionary<string, double> processValues = new Dictionary<string, double>();
             internal List<StructuredAnalytic> analytics = new List<StructuredAnalytic>();
         }
-
     }
 }
