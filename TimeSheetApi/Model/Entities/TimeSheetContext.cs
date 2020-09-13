@@ -1,39 +1,39 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
-using TimeSheetApi.Model.Entities;
+using System.Linq;
 
+using TimeSheetApi.Model.Entities;
+using TimeSheetApi.Model.Identity;
 
 namespace TimeSheetApi.Model
 {
 
-    public class TimeSheetContext :DbContext
+    public class TimeSheetContext :IdentityDbContext<TimeSheetUser>
     {
 
-        const string CONNECTION_STRING = @"Data Source=192.168.0.5,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+        const string CONNECTION_STRING = @"Data Source=192.168.0.4,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=false;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
         //const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+        
         public TimeSheetContext() : base()
         {
+            //Database.EnsureCreated();
         }
 
-
-        public static readonly ILoggerFactory MyLoggerFactory = LoggerFactory.Create(builder => 
-        {
-            builder.AddDebug();
-            builder.AddFilter((category, level) =>
-            category == DbLoggerCategory.Database.Command.Name &&
-            level == LogLevel.Information);
-
-        });
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            //optionsBuilder.UseLoggerFactory(MyLoggerFactory);
             optionsBuilder.UseSqlServer(CONNECTION_STRING);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            
 
             modelBuilder.Entity<Analytic>().HasOne(c => c.AdminHead).WithMany().HasForeignKey(c => c.HeadAdmId);
             modelBuilder.Entity<Analytic>().HasOne(c => c.FunctionHead).WithMany().HasForeignKey(c => c.HeadFuncId);
@@ -62,5 +62,6 @@ namespace TimeSheetApi.Model
         public DbSet<TimeSheetTable> TimeSheetTableSet { get; set; }
         public DbSet<Upravlenie> UpravlenieSet { get; set; }
         public DbSet<Report> Reports { get; set; }
+        
     }
 }

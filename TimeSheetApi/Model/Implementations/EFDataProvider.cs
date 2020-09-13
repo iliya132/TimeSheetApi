@@ -1,24 +1,18 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using System.Data;
-using System.Windows;
-using TimeSheetApi.Model.Entities;
-using System.Text;
-using TimeSheetApi.Model.Interfaces;
-using System.Diagnostics;
-using Process = TimeSheetApi.Model.Entities.Process;
 using System.IO;
-using TimeSheetApp.Model;
-using TimeSheetApp.Model.Reports;
+using System.Linq;
+
+using TimeSheetApi.Model.Entities;
+using TimeSheetApi.Model.Interfaces;
 using TimeSheetApi.Model.Reports;
-using System.Reflection;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.Logging;
+
+using TimeSheetApp.Model.Reports;
+
+using Process = TimeSheetApi.Model.Entities.Process;
 
 namespace TimeSheetApi.Model.Implementations
 {
