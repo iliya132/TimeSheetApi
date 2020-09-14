@@ -23,41 +23,14 @@ namespace TimeSheetApi.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    //[Authorize(Roles = "TimeSheetUser")]
+    [Authorize]
     public class TimeSheetController : ControllerBase
     {
         IDataProvider _dbProvider;
-        UserManager<TimeSheetUser> userManager;
-        RoleManager<IdentityRole> roleManager;
 
-        public TimeSheetController(IDataProvider dataProvider, UserManager<TimeSheetUser> userManager, RoleManager<IdentityRole> roleManager)
+        public TimeSheetController(IDataProvider dataProvider)
         {
             _dbProvider = dataProvider;
-            this.userManager = userManager;
-            this.roleManager = roleManager;
-            if (!userManager.Users.Any(i => i.NormalizedUserName.Equals("TIMESHEETUSER")))
-            {
-                TimeSheetUser newUser = new TimeSheetUser
-                {
-                    NormalizedUserName = "TIMESHEETUSER",
-                    UserName = "TimeSheetUser"
-                };
-                IdentityRole newRole = new IdentityRole
-                {
-                    Name = "TimeSheetUser",
-                    NormalizedName = "TIMESHEETUSER"
-                };
-                var userCreationres = userManager.CreateAsync(newUser, "DK_User1!").Result;
-                var roleCreationres = roleManager.CreateAsync(newRole).Result;
-                var result = userManager.AddToRoleAsync(newUser, "TimeSheetUser").Result;
-                if (!result.Succeeded)
-                {
-                    foreach( var error in result.Errors)
-                    {
-                        Debug.WriteLine(error);
-                    }
-                }
-            }
         }
 
         [HttpGet]
@@ -72,6 +45,8 @@ namespace TimeSheetApi.Controllers
             }
             else
             {
+
+
                 return "Не авторизован";
             }
         }
@@ -85,6 +60,11 @@ namespace TimeSheetApi.Controllers
         [Route(nameof(GetProcesses))]
         public IActionResult GetProcesses()
         {
+            Debug.WriteLine($"HEADERS:");
+            foreach (var header in Request.Headers)
+            {
+                Debug.WriteLine($"{header.Key} - {header.Value}");
+            }
             return Ok(_dbProvider.GetProcesses());
             
         }

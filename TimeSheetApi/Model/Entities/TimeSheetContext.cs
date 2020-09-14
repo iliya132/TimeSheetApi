@@ -13,7 +13,7 @@ using TimeSheetApi.Model.Identity;
 namespace TimeSheetApi.Model
 {
 
-    public class TimeSheetContext :IdentityDbContext<TimeSheetUser>
+    public class TimeSheetContext :DbContext
     {
 
         const string CONNECTION_STRING = @"Data Source=192.168.0.4,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=false;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
