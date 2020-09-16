@@ -1,20 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
-using Newtonsoft.Json;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Mime;
 
 using TimeSheetApi.Model.Entities;
-using TimeSheetApi.Model.Identity;
-using TimeSheetApi.Model.Implementations;
 using TimeSheetApi.Model.Interfaces;
 
 using Process = TimeSheetApi.Model.Entities.Process;
@@ -45,8 +38,6 @@ namespace TimeSheetApi.Controllers
             }
             else
             {
-
-
                 return "Не авторизован";
             }
         }
@@ -169,7 +160,7 @@ namespace TimeSheetApi.Controllers
         [HttpPost]
         [Route(nameof(Commit))]
         public void Commit() => _dbProvider.Commit();
-
+   
         [HttpGet]
         [Route(nameof(GetTimeSpent))]
         public double GetTimeSpent(string userName, DateTime start, DateTime end) => _dbProvider.GetTimeSpent(userName, start, end);

@@ -1,14 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
-
-using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
 
 using TimeSheetApi.Model.Entities;
-using TimeSheetApi.Model.Identity;
 
 namespace TimeSheetApi.Model
 {
@@ -16,8 +8,8 @@ namespace TimeSheetApi.Model
     public class TimeSheetContext :DbContext
     {
 
-        const string CONNECTION_STRING = @"Data Source=192.168.0.4,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=false;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
-        //const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+        //const string CONNECTION_STRING = @"Data Source=192.168.0.4,1433\MYDB;Initial Catalog=TimeSheet; Integrated Security=false;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
+        const string CONNECTION_STRING = @"Data Source=A105512\A105512;Initial Catalog=TimeSheet;Integrated Security=False;user id = TimeSheetuser; password = DK_user!;MultipleActiveResultSets=True;";
         
         public TimeSheetContext() : base()
         {

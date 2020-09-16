@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
+using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-
+using System.Security;
 using TimeSheetApi.Model.Entities;
 using TimeSheetApi.Model.Interfaces;
 using TimeSheetApi.Model.Reports;
@@ -254,7 +254,7 @@ namespace TimeSheetApi.Model.Implementations
         public Analytic LoadAnalyticData(string userName)
         {
             Analytic analytic;
-            analytic = _dbContext.AnalyticSet.Include("Departments").Include("Directions").Include("Upravlenie").Include("Otdel").Include("AdminHead").Include("FunctionHead").FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
+            analytic = _dbContext.AnalyticSet.Include("Departments").Include("Directions").Include("Upravlenie").Include("Otdel").Include("AdminHead").Include("FunctionHead").Include(i=>i.Role).FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             if (analytic == null)
             {
                 analytic = new Analytic()
@@ -268,7 +268,7 @@ namespace TimeSheetApi.Model.Implementations
                     FatherName = "NotSet",
                     OtdelId = 1,
                     PositionsId = 1,
-                    RoleTableId = 1,
+                    RoleTableId = 6,
                     UpravlenieId = 1
                 };
                 _dbContext.AnalyticSet.Add(analytic);
@@ -276,6 +276,31 @@ namespace TimeSheetApi.Model.Implementations
                 analytic = _dbContext.AnalyticSet.FirstOrDefault(i => i.UserName.ToLower().Equals(userName));
             }
             return analytic;
+        }
+
+        private Analytic GetAnalyticFromDMACRM(string userName)
+        {
+            SecureString pswrd = new SecureString();
+            string temp = "CD_ORPPA1";
+            foreach (char itm in temp)
+            {
+                pswrd.AppendChar(itm);
+            }
+            pswrd.MakeReadOnly();
+            Console.WriteLine("Generating connection");
+            OracleConnection connection = new OracleConnection(
+                "Data Source = (DESCRIPTION=(CONNECT_TIMEOUT=1)" +
+                "(TRANSPORT_CONNECT_TIMEOUT=1)" +
+                "(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)" +
+                        "(HOST=exa2-scan)" +
+                        "(PORT=1521))" +
+                    "(ADDRESS=" +
+                        "(PROTOCOL=TCP)" +
+                        "(HOST=exa1-scan)" +
+                        "(PORT=1521)))" +
+                "(CONNECT_DATA=(SERVER=dedicated)" +
+                    "(SERVICE_NAME=SANDBOX_TAF)))", new OracleCredential("CD_ORPPA", pswrd));
+            return null;
         }
 
         /// <summary>
