@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
+using System.Collections.Generic;
 using System.Linq;
 
 using TimeSheetApi.Model.Entities;
@@ -22,7 +23,24 @@ namespace TimeSheetApi.Model
         public TimeSheetContext() : base()
         {
             //Database.EnsureCreated();
+            //List<RiskNew> risks = NewRiskSet.Where(i => i.RiskId == 1).ToList();
+            //List<Risk> RiskDict = RiskSet.ToList();
+            //for (int i = 0; i < risks.Count; i++)
+            //{
+            //    for (int j = 0; j < RiskDict.Count; j++)
+            //    {
+            //        if (RiskDict[j].Id == 1) continue;
+            //        NewRiskSet.Add(new RiskNew
+            //        {
+            //            TimeSheetTableId = risks[i].TimeSheetTableId,
+            //            RiskId = RiskDict[j].Id
+            //        });
+            //    }
+            //    NewRiskSet.Remove(risks[i]);
+            //}
+            //SaveChanges();
         }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
