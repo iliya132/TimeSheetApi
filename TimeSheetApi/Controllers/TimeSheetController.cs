@@ -16,7 +16,7 @@ namespace TimeSheetApi.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class TimeSheetController : ControllerBase
     {
         IDataProvider _dbProvider;
